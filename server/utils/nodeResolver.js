@@ -4,6 +4,10 @@ function normalizeText(value) {
     .trim();
 }
 
+function escapeRegex(str) {
+  return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+}
+
 function getAllEditableNodes(layout) {
   return Object.values(layout.nodes || {}).filter(
     (node) =>
@@ -31,9 +35,6 @@ function getNodeAliases(node) {
     aliases.add(content);
   }
 
-  /**
-   * Heuristic aliases
-   */
   if (node.type === "text") {
     if (node.id.includes("headline")) {
       aliases.add("headline");
@@ -54,21 +55,49 @@ function getNodeAliases(node) {
       aliases.add("call to action");
       aliases.add("buy button");
     }
+
+    aliases.add("text");
+    aliases.add("text node");
   }
 
   if (node.type === "image") {
-    if (node.id.includes("product")) {
+    aliases.add("image");
+    aliases.add("image node");
+
+    const imageName = normalizeText(
+      node?.name || ""
+    );
+
+    const imageSource = normalizeText(
+      node?.data?.sourceUrl ||
+      node?.data?.src ||
+      ""
+    );
+
+    if (
+      node.id.includes("product") ||
+      imageName.includes("product") ||
+      imageSource.includes("product")
+    ) {
       aliases.add("product");
       aliases.add("product image");
       aliases.add("hero image");
     }
 
-    if (node.id.includes("logo")) {
+    if (
+      node.id.includes("logo") ||
+      imageName.includes("logo") ||
+      imageSource.includes("logo")
+    ) {
       aliases.add("logo");
       aliases.add("brand logo");
     }
 
-    if (node.id.includes("background")) {
+    if (
+      node.id.includes("background") ||
+      imageName.includes("background") ||
+      imageSource.includes("background")
+    ) {
       aliases.add("background");
       aliases.add("background image");
     }
@@ -80,6 +109,9 @@ function getNodeAliases(node) {
       aliases.add("discount badge");
       aliases.add("sticker");
     }
+
+    aliases.add("shape");
+    aliases.add("shape node");
   }
 
   return [...aliases];
@@ -101,15 +133,93 @@ function resolveSingleReference(layout, phrase) {
   return null;
 }
 
+function extractLastReferencedTarget(history = []) {
+  if (!Array.isArray(history) || history.length === 0) {
+    return null;
+  }
+
+  for (let i = history.length - 1; i >= 0; i--) {
+    const entry = history[i];
+
+    if (!entry?.actions || !Array.isArray(entry.actions)) {
+      continue;
+    }
+
+    for (let j = entry.actions.length - 1; j >= 0; j--) {
+      const action = entry.actions[j];
+
+      if (action.nodeId) {
+        return {
+          mode: "single",
+          nodeId: action.nodeId
+        };
+      }
+
+      if (action.movingNodeId) {
+        return {
+          mode: "single",
+          nodeId: action.movingNodeId
+        };
+      }
+
+      if (action.target?.nodeType) {
+        return {
+          mode: "group",
+          nodeType: action.target.nodeType
+        };
+      }
+    }
+  }
+
+  return null;
+}
+
+function resolvePronouns(message, history) {
+  const lastTarget = extractLastReferencedTarget(history);
+
+  if (!lastTarget) {
+    return message;
+  }
+
+  let rewritten = message;
+
+  if (lastTarget.mode === "single") {
+    rewritten = rewritten.replace(
+      /\b(it|this|that)\b/gi,
+      lastTarget.nodeId
+    );
+  }
+
+  if (lastTarget.mode === "group") {
+    rewritten = rewritten.replace(
+      /\ball of them\b/gi,
+      `all ${lastTarget.nodeType}`
+    );
+
+    rewritten = rewritten.replace(
+      /\b(them|these|those)\b/gi,
+      lastTarget.nodeType
+    );
+  }
+
+  return rewritten;
+}
+
 export function rewriteMessageWithResolvedNodes(
   message,
-  layout
+  layout,
+  history = []
 ) {
   if (!message || typeof message !== "string") {
     return message;
   }
 
   let rewritten = message;
+
+  rewritten = resolvePronouns(
+    rewritten,
+    history
+  );
 
   const nodes = getAllEditableNodes(layout);
 
@@ -122,7 +232,7 @@ export function rewriteMessageWithResolvedNodes(
       }
 
       const regex = new RegExp(
-        `\\b${alias.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\b`,
+        `\\b${escapeRegex(alias)}\\b`,
         "gi"
       );
 

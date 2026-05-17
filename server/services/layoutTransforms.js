@@ -118,7 +118,7 @@ function calculatePosition(artboard, node, position) {
     case "center":
       return {
         x: centerX,
-        y: centerY
+        y: node.y
       };
 
     case "top_left":
@@ -392,6 +392,71 @@ export function deleteNode(layout, nodeId) {
   );
 
   delete workingLayout.nodes[nodeId];
+
+  return workingLayout;
+}
+
+export function changeNodeStyle(
+  layout,
+  nodeId,
+  property,
+  value
+) {
+  const workingLayout = cloneLayout(layout);
+  const node = getNode(workingLayout, nodeId);
+
+  if (node.type !== "text") {
+    throw new Error(
+      `Style changes currently supported only for text nodes: ${node.type}`
+    );
+  }
+
+  if (!node.style) {
+    node.style = {};
+  }
+
+  if (!node.style.visual) {
+    node.style.visual = {};
+  }
+
+  switch (property) {
+    case "color":
+      node.style.visual.color = {
+        type: "solid",
+        value
+      };
+      break;
+
+    case "fontSize":
+      if (typeof value !== "number") {
+        throw new Error("fontSize must be numeric");
+      }
+
+      node.style.visual.fontSize = value;
+
+      const artboard = getArtboard(workingLayout);
+      node.fontSizeRatio = value / artboard.width;
+      break;
+
+    case "fontWeight":
+      node.style.visual.fontWeight = value;
+      break;
+
+    case "fontFamily":
+      node.style.visual.fontFamily = value;
+      break;
+
+    case "fontStyle":
+      node.style.visual.fontStyle = value;
+      break;
+
+    default:
+      throw new Error(
+        `Unsupported style property: ${property}`
+      );
+  }
+
+  updateNormalized(workingLayout, node);
 
   return workingLayout;
 }

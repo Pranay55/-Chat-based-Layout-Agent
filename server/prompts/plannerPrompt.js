@@ -20,6 +20,42 @@ STRICT RULES:
 - Never invent action types
 - Never omit required fields
 
+- Pronoun resolution:
+
+  - Single-node pronouns:
+    - it
+    - this
+    - that
+
+    These refer to the most recently referenced node.
+
+    Examples:
+    move headline up
+    make it bigger
+    → "it" means headline
+
+    move badge right
+    delete it
+    → "it" means badge
+
+    --------------------------------------------------
+
+  - Group pronouns:
+    - them
+    - these
+    - those
+
+    These refer to the most recently referenced node group.
+
+    Examples:
+    make all text smaller
+    move them left
+    → "them" means all text
+
+    --------------------------------------------------
+
+    NEVER assume artboard/layout/canvas unless explicitly mentioned.
+
 ==================================================
 SEMANTIC ACTION SCHEMAS
 ==================================================
@@ -97,6 +133,8 @@ Output:
 
 3. semantic_resize
 
+Use for semantic resizing of any editable node.
+
 Schema:
 {
   "type": "semantic_resize",
@@ -113,14 +151,47 @@ Valid intents:
 "medium_grow"
 "large_grow"
 
-Example:
-User: make headline bigger
+Interpretations:
+- "make bigger" → bigger
+- "make smaller" → smaller
+- "grow" → grow
+- "shrink" → shrink
+- "keep large" → bigger
+- "keep big" → bigger
+- "stay large" → bigger
+- "remain large" → bigger
 
+Examples:
+User: make headline bigger
 Output:
 {
   "type": "semantic_resize",
   "nodeId": "headline",
   "intent": "bigger"
+}
+
+User: make product bigger
+Output:
+{
+  "type": "semantic_resize",
+  "nodeId": "product",
+  "intent": "bigger"
+}
+
+User: keep the product large
+Output:
+{
+  "type": "semantic_resize",
+  "nodeId": "product",
+  "intent": "bigger"
+}
+
+User: make image smaller
+Output:
+{
+  "type": "semantic_resize",
+  "nodeId": "image",
+  "intent": "smaller"
 }
 
 --------------------------------------------------
@@ -315,6 +386,83 @@ Output:
   "type": "semantic_bulk_align",
   "nodeType": "text",
   "alignment": "center"
+}
+
+--------------------------------------------------
+
+11. update_node_style
+
+Use for styling text nodes.
+
+Schema:
+{
+  "type": "update_node_style",
+  "nodeId": "headline",
+  "property": "color",
+  "value": "#FF0000"
+}
+
+Supported properties:
+"color"
+"fontSize"
+"fontWeight"
+"fontFamily"
+"fontStyle"
+
+Examples:
+
+User: change headline color to red
+Output:
+{
+  "type": "update_node_style",
+  "nodeId": "headline",
+  "property": "color",
+  "value": "#FF0000"
+}
+
+User: make subtitle blue
+Output:
+{
+  "type": "update_node_style",
+  "nodeId": "subtitle",
+  "property": "color",
+  "value": "#0000FF"
+}
+
+User: make headline bold
+Output:
+{
+  "type": "update_node_style",
+  "nodeId": "headline",
+  "property": "fontWeight",
+  "value": 700
+}
+
+User: make headline italic
+Output:
+{
+  "type": "update_node_style",
+  "nodeId": "headline",
+  "property": "fontStyle",
+  "value": "italic"
+}
+
+User: change font to Helvetica
+Output:
+{
+  "type": "update_node_style",
+  "nodeId": "headline",
+  "property": "fontFamily",
+  "value": "Helvetica"
+}
+
+User: set headline font size to 36
+Output:
+{
+  "type": "update_node_style",
+  "nodeId": "headline",
+  "property": "fontSize",
+  "value": 36
 }
 
 ==================================================

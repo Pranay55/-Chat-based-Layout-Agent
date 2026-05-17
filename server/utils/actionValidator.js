@@ -5,6 +5,8 @@ const SUPPORTED_ACTIONS = new Set([
   "resize_node",
   "move_node_relative",
   "delete_node",
+  "change_node_style",
+  "update_node_style",
 
   /**
    * BULK
@@ -48,6 +50,14 @@ const SUPPORTED_NODE_TYPES = new Set([
   "shape"
 ]);
 
+const SUPPORTED_STYLE_PROPERTIES = new Set([
+  "color",
+  "fontSize",
+  "fontWeight",
+  "fontFamily",
+  "fontStyle"
+]);
+
 export function validateAction(action) {
   if (!action || typeof action !== "object") {
     throw new Error("Action must be an object");
@@ -80,6 +90,11 @@ export function validateAction(action) {
 
     case "delete_node":
       validateDeleteNode(action);
+      break;
+
+    case "change_node_style":
+    case "update_node_style":
+      validateChangeNodeStyle(action);
       break;
 
     /**
@@ -223,6 +238,30 @@ function validateMoveNodeRelative(action) {
 function validateDeleteNode(action) {
   if (!action.nodeId || typeof action.nodeId !== "string") {
     throw new Error("delete_node requires nodeId");
+  }
+}
+
+function validateChangeNodeStyle(action) {
+  if (!action.nodeId || typeof action.nodeId !== "string") {
+    throw new Error("change_node_style requires nodeId");
+  }
+
+  const property = action.params?.property;
+  const value = action.params?.value;
+
+  if (!SUPPORTED_STYLE_PROPERTIES.has(property)) {
+    throw new Error(
+      `Unsupported style property: ${property}`
+    );
+  }
+
+  if (
+    value === undefined ||
+    value === null
+  ) {
+    throw new Error(
+      "change_node_style requires style value"
+    );
   }
 }
 

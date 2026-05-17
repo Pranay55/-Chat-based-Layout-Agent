@@ -4,104 +4,113 @@ import { sendChatMessage } from "../utils/api";
 
 export default function useLayoutAgent() {
   const [initialLayout] = useState(initialLayoutData);
+
   const [layout, setLayout] = useState(initialLayoutData);
+
+  const [history, setHistory] = useState([]);
+  const [redoHistory, setRedoHistory] = useState([]);
 
   const [messages, setMessages] = useState([
     {
       role: "assistant",
-      content: "Hi! Tell me how you'd like to modify the layout.",
-    },
+      content: "Hi! Tell me how you'd like to modify the layout."
+    }
   ]);
 
-  const [loading, setLoading] = useState(false);
-
-  function buildHistoryContext(messages) {
-    if (messages.length <= 6) {
-      return messages;
-    }
-
-    const firstMessages = messages.slice(0, 2);
-    const recentMessages = messages.slice(-5);
-
-    return [...firstMessages, ...recentMessages];
-  }
+  const [isLoading, setIsLoading] = useState(false);
 
   const sendMessage = async (userMessage) => {
-    if (!userMessage.trim()) return;
+    if (!userMessage.trim() || isLoading) {
+      return;
+    }
 
     const lowerMsg = userMessage.toLowerCase();
 
-    // deterministic reset
+    /**
+     * deterministic reset
+     */
     if (
       lowerMsg.includes("reset") ||
       lowerMsg.includes("original layout") ||
       lowerMsg.includes("start over")
     ) {
       setLayout(initialLayout);
+      setHistory([]);
+      setRedoHistory([]);
 
       setMessages((prev) => [
         ...prev,
         {
           role: "user",
-          content: userMessage,
+          content: userMessage
         },
         {
           role: "assistant",
-          content: "Layout reset to the original version.",
-        },
+          content: "Layout reset to the original version."
+        }
       ]);
 
       return;
     }
 
-    const userChatMessage = {
-      role: "user",
-      content: userMessage,
-    };
+    /**
+     * optimistic user message
+     */
+    setMessages((prev) => [
+      ...prev,
+      {
+        role: "user",
+        content: userMessage
+      }
+    ]);
 
-    const updatedMessages = [...messages, userChatMessage];
-
-    setMessages(updatedMessages);
-    setLoading(true);
+    setIsLoading(true);
 
     try {
-      const historyForLLM = buildHistoryContext(updatedMessages);
-
       const response = await sendChatMessage({
         message: userMessage,
         layout,
-        initialLayout,
-        history: historyForLLM,
+        history,
+        redoHistory
       });
 
-      setLayout(response.updatedLayout);
+      setLayout(response.layout);
+      setHistory(response.history || []);
+      setRedoHistory(response.redoHistory || []);
 
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: response.assistantMessage,
-        },
+          content: response.intent || "Layout updated."
+        }
       ]);
     } catch (error) {
       console.error(error);
 
+      const errorMessage =
+        error.response?.data?.error ||
+        error.message ||
+        "Something went wrong while updating the layout.";
+
       setMessages((prev) => [
         ...prev,
         {
           role: "assistant",
-          content: "Something went wrong while updating the layout.",
-        },
+          content: errorMessage
+        }
       ]);
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
   return {
     layout,
     messages,
-    loading,
-    sendMessage,
+    history,
+    redoHistory,
+    isLoading,
+    sendMessage
   };
 }

@@ -5,6 +5,7 @@ import {
   resizeNode,
   moveNodeRelativeToNode,
   deleteNode,
+  changeNodeStyle,
   resizeNodesByType,
   moveNodesByTypeOffset,
   deleteNodesByType,
@@ -69,6 +70,15 @@ export function executeAction(
       return deleteNode(
         layout,
         action.nodeId
+      );
+
+    case "change_node_style":
+    case "update_node_style":
+      return changeNodeStyle(
+        layout,
+        action.nodeId,
+        action.params.property,
+        action.params.value
       );
 
     /**

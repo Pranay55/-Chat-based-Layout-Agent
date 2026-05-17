@@ -112,9 +112,6 @@ export async function generateActionPlan({
     throw new Error("Redo history must be an array");
   }
 
-  /**
-   * Fast deterministic undo
-   */
   const undoPlan = detectUndoIntent(
     message,
     history
@@ -125,9 +122,6 @@ export async function generateActionPlan({
     return undoPlan;
   }
 
-  /**
-   * Fast deterministic redo
-   */
   const redoPlan = detectRedoIntent(
     message,
     redoHistory
@@ -138,17 +132,12 @@ export async function generateActionPlan({
     return redoPlan;
   }
 
-  /**
-   * Resolve user-friendly node references
-   */
   const resolvedMessage = rewriteMessageWithResolvedNodes(
     message,
-    layout
+    layout,
+    history
   );
 
-  /**
-   * Normal LLM planner
-   */
   const systemPrompt = buildPlannerPrompt(layout);
 
   const userPrompt = `

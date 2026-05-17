@@ -274,6 +274,25 @@ function normalizeAction(action, artboard) {
       return normalizeSemanticRelativeMove(action);
 
     /**
+     * STYLE
+     */
+    case "change_node_style":
+    case "update_node_style": 
+      return {
+        type: "change_node_style",
+        nodeId: action.nodeId,
+        params: {
+          property:
+            action.params?.property ||
+            action.property,
+
+          value:
+            action.params?.value ||
+            action.value
+        }
+      };
+
+    /**
      * BULK
      */
     case "semantic_bulk_resize":

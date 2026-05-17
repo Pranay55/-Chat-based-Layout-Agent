@@ -1,265 +1,441 @@
-# Chat-Based Layout Agent
+# Layout Agent AI
 
-A chat-driven AI layout transformation tool built for the Compra AI Engineer Intern assignment.  
-The application allows users to modify a design layout JSON using natural language instructions such as:
+Layout Agent AI is a chat-based layout editing application that enables users to modify visual layouts using natural language instructions. Instead of manually editing JSON or design coordinates, users can type commands like **"move headline up"**, **"make all text smaller"**, or **"change the headline color to red"**, and the system automatically interprets and applies the changes.
 
-- "Convert this design to 9:16"
-- "Move the headline to the top"
-- "Make the headline smaller"
-- "Keep the product large"
-
-The agent updates the layout JSON dynamically and reflects the changes in a visual wireframe preview.
+The application combines an LLM-powered planning layer with a deterministic layout execution engine, providing flexible semantic editing while maintaining predictable and safe layout transformations.
 
 ---
 
 # Features
 
-- Chat-based UI for natural language layout editing
-- LLM-powered layout reasoning using Claude/OpenAI
-- Dynamic JSON transformations
-- Aspect ratio conversion support (1:1 → 9:16, etc.)
-- Wireframe layout preview
-- Conversation context handling for follow-up instructions
-- Safe JSON validation before applying updates
+- Natural language layout editing
+- Semantic command understanding
+- Relative node positioning
+- Bulk node operations
+- Text styling updates
+- Artboard resizing
+- Undo / Redo support
+- Pronoun resolution
+- Live wireframe preview
+- JSON-driven rendering
 
 ---
 
-# Tech Stack
+# Project Description
 
-## Frontend
-- React + Vite
-- Tailwind CSS
-- Axios
-
-## Backend
-- Node.js
-- Express.js
-- Anthropic Claude API / OpenAI API
+This project demonstrates an AI-powered layout editing workflow where users interact with a design through chat instead of manual editing tools. The system converts natural language instructions into structured layout actions, validates them, executes deterministic transformations, and updates both the layout JSON and visual preview in real time.
 
 ---
 
-# Project Structure
+# Prerequisites
+
+Before running the project, ensure the following are installed:
+
+- **Node.js** v18 or higher (recommended: v20+)
+- **npm**
+- **OpenAI API Key** (or API key for your configured LLM provider)
+
+Check versions:
 
 ```bash
-layout-agent/
-├── client/
-│   ├── src/
-│   │   ├── components/
-│   │   ├── hooks/
-│   │   ├── utils/
-│   │   ├── data/
-│   │   ├── App.jsx
-│   │   └── main.jsx
-│   └── package.json
-│
-├── server/
-│   ├── routes/
-│   ├── services/
-│   ├── prompts/
-│   ├── utils/
-│   ├── index.js
-│   └── package.json
-│
-├── README.md
-├── APPROACH.md
-└── .gitignore
+node -v
+npm -v
 ```
 
 ---
 
-# How It Works
+# Setup
 
-The application uses an LLM-powered layout agent to interpret user instructions and modify the layout JSON accordingly.
-
-Each layout node contains:
-- Absolute coordinates (`x`, `y`, `width`, `height`)
-- Normalized coordinates (`nx`, `ny`, `nw`, `nh`)
-
-Normalized coordinates allow responsive resizing and aspect ratio transformations while preserving layout structure.
-
-The backend:
-1. Receives the current layout JSON and user instruction
-2. Builds a structured system prompt
-3. Sends the prompt to the LLM
-4. Validates the returned JSON
-5. Returns the updated layout to the frontend
-
----
-
-# Setup Instructions
-
-## Prerequisites
-
-- Node.js v18+
-- npm
-- Anthropic or OpenAI API key
-- Git
-
----
-
-# 1. Clone Repository
+## 1. Clone Repository
 
 ```bash
-git clone <YOUR_REPO_URL>
+git clone https://github.com/Pranay55/-Chat-based-Layout-Agent layout-agent
 cd layout-agent
 ```
 
 ---
 
-# 2. Install Frontend Dependencies
+## 2. Install Dependencies
 
-```bash
-cd client
-npm install
-```
-
----
-
-# 3. Install Backend Dependencies
-
-```bash
-cd ../server
-npm install
-```
-
----
-
-# 4. Create Environment Variables
-
-Create a `.env` file inside `server/`
-
-```env
-ANTHROPIC_API_KEY=your_api_key_here
-PORT=3001
-```
-
----
-
-# 5. Run Backend
+### Backend
 
 ```bash
 cd server
-npm run dev
+npm install
+```
+
+### Frontend
+
+```bash
+cd ../client
+npm install
 ```
 
 ---
 
-# 6. Run Frontend
+## 3. Configure Environment Variables
+
+Create a `.env` file inside the `server/` directory:
+
+```env
+OPENAI_API_KEY=your_api_key_here
+PORT=3001
+```
+
+If using another provider, configure the corresponding API key inside `llmService.js`.
+
+---
+
+# Running the Project
+
+## Start Backend
+
+From `server/`:
 
 ```bash
-cd client
 npm run dev
 ```
+
+Backend runs at:
+
+```bash
+http://localhost:3001
+```
+
+---
+
+## Start Frontend
+
+From `client/`:
+
+```bash
+npm run dev
+```
+
+Frontend usually runs at:
+
+```bash
+http://localhost:5173
+```
+
+---
+
+# How to Use
+
+Open the frontend in your browser and interact with the chat interface.
+
+The layout preview updates automatically whenever the JSON layout changes.
 
 ---
 
 # Example Prompts
 
-Try the following instructions:
+## Single Node Operations
 
 ```text
-Convert this design to 9:16
-Move the headline to the top
-Make the headline smaller
-Center the product
-Move the offer badge higher
-Make the discount badge bigger
-Change headline color to red
+move headline up
+move badge right
+make headline bigger
+delete the discount badge
+move buy button below headline
 ```
 
 ---
 
-# Core Functionalities
-
-## Layout Transformations
-- Resize artboard
-- Move elements
-- Resize nodes
-- Update typography
-- Maintain normalized coordinates
-
-## LLM Reasoning
-The agent identifies semantic roles such as:
-- Headline
-- Product image
-- Offer badge
-- CTA text
-- Background
-
-and applies transformations intelligently.
-
----
-
-# Wireframe Preview
-
-The application includes a responsive wireframe preview that:
-- Renders text, image, and shape nodes
-- Uses normalized coordinates
-- Updates live after each transformation
-
----
-
-# JSON Validation
-
-The backend validates all returned JSON before applying updates to prevent malformed layouts from breaking the application.
-
-Validation checks:
-- rootNodes existence
-- nodes structure
-- valid node references
-- required properties
-
----
-
-# Conversation Context
-
-The last few chat messages are passed to the LLM to support follow-up instructions like:
+## Bulk Operations
 
 ```text
-Make it smaller
-Move it higher
-Keep it centered
+make all text smaller
+make all shapes bigger
+move all images left
+delete all shapes
+center all text
 ```
 
-This allows the agent to understand contextual references.
+---
+
+## Style Editing
+
+```text
+change the headline color to red
+make headline bold
+make headline italic
+change font to Helvetica
+set headline font size to 36
+```
+
+Supported style properties:
+
+- color
+- fontSize
+- fontWeight
+- fontFamily
+- fontStyle
+
+---
+
+## Artboard Resizing
+
+```text
+convert this design to 9:16
+make this 16:9
+change canvas to 1:1
+convert to instagram story
+```
+
+Supported presets:
+
+- Instagram Post (1:1)
+- Instagram Story (9:16)
+- YouTube (16:9)
+- Instagram Portrait (4:5)
+
+---
+
+## Conversational Editing
+
+The system supports context-aware follow-up commands.
+
+Example:
+
+```text
+move headline up
+make it bigger
+change its color to blue
+move buy button below it
+```
+
+Pronouns supported:
+
+- it
+- this
+- that
+- them
+- these
+- those
+
+---
+
+## Undo / Redo
+
+```text
+undo
+undo 2
+redo
+redo last action
+go forward
+```
+
+---
+
+# Tech Stack Overview
+
+## Frontend
+
+- React
+- Vite
+- Axios
+
+Responsibilities:
+
+- Chat interface
+- Request handling
+- Live layout visualization
+- Rendering layout preview
+
+---
+
+## Backend
+
+- Node.js
+- Express
+- Zod
+
+Responsibilities:
+
+- API routing
+- Request validation
+- Action execution
+- History management
+- Undo/redo state management
+
+---
+
+## AI Layer
+
+- OpenAI API (LLM)
+
+Responsibilities:
+
+- Intent understanding
+- Natural language parsing
+- Action plan generation
+- Semantic interpretation
+
+Examples:
+
+```text
+move slightly upward
+keep the product large
+make headline bigger
+```
+
+---
+
+## Layout Engine
+
+Custom deterministic transformation engine.
+
+Supports:
+
+- Node movement
+- Relative placement
+- Semantic anchor positioning
+- Node resizing
+- Text style updates
+- Node deletion
+- Bulk transformations
+- Artboard resizing
+- Undo / redo restoration
+
+---
+
+# Architecture Overview
+
+## System Flow
+
+```text
+User Prompt
+   ↓
+Planner Service (LLM)
+   ↓
+Structured JSON Action Plan
+   ↓
+Action Normalization
+   ↓
+Validation Layer
+   ↓
+Execution Engine
+   ↓
+Updated Layout JSON
+   ↓
+Frontend Preview Update
+```
+
+---
+
+# Project Structure
+
+```text
+layout-agent/
+│
+├── client/
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── ChatPanel.jsx
+│   │   │   └── WireframePreview.jsx
+│   │   │
+│   │   ├── App.jsx
+│   │   └── main.jsx
+│   │
+│   └── package.json
+│
+├── server/
+│   ├── prompts/
+│   │   └── plannerPrompt.js
+│   │
+│   ├── routes/
+│   │   └── chat.js
+│   │
+│   ├── services/
+│   │   ├── llmService.js
+│   │   ├── plannerService.js
+│   │   ├── actionPlanner.js
+│   │   ├── actionExecutor.js
+│   │   └── layoutTransforms.js
+│   │
+│   ├── utils/
+│   │   ├── actionValidator.js
+│   │   ├── layoutHelpers.js
+│   │   ├── nodeResolver.js
+│   │   ├── semanticMappings.js
+│   │   └── jsonValidator.js
+│   │
+│   ├── server.js
+│   └── package.json
+│
+└── README.md
+```
+
+---
+
+# Layout Preview Approach
+
+Goal: show a visual approximation of the layout.
+
+Implementation:
+
+- Uses absolute-positioned `<div>` elements
+- Scales elements using normalized coordinates:
+  - `nx`
+  - `ny`
+  - `nw`
+  - `nh`
+- Renders:
+  - styled text nodes
+  - image placeholders
+  - shape rectangles
+- Automatically updates when layout JSON changes
+
+This provides fast wireframe feedback without needing a full design renderer.
+
+---
+
+# Example JSON Action
+
+Example planner output:
+
+```json
+{
+  "intent": "Move headline to top",
+  "actions": [
+    {
+      "type": "move_node",
+      "nodeId": "headline",
+      "params": {
+        "position": "top"
+      }
+    }
+  ]
+}
+```
 
 ---
 
 # Future Improvements
 
-- Real image rendering
-- Drag-and-drop editing
-- Multi-artboard support
-- Undo/redo history
-- Tool calling for safer transformations
-- Advanced semantic layout reasoning
-- Export to PNG/SVG
+Potential enhancements:
+
+- Multi-node selection by semantic grouping
+- Rich image rendering instead of placeholders
+- Snap alignment tools
+- Layer ordering controls
+- Rotation / transforms
+- More advanced styling controls
+- Layout constraints
+- Export to design formats
 
 ---
 
-# Approach Summary
+# Notes
 
-This project combines:
-- deterministic layout transformation logic
-- normalized coordinate math
-- LLM-based semantic reasoning
-
-The LLM handles understanding user intent, while the backend ensures layout transformations remain safe and structured.
+- Current styling support is focused on text nodes
+- Preview is a wireframe approximation, not pixel-perfect rendering
+- LLM output is validated before execution for safety
+- Deterministic transforms ensure predictable behavior
 
 ---
 
-# Submission
+# License
 
-Deliverables included:
-- GitHub repository
-- README
-- Layout transformation system
-- Chat interface
-- JSON update handling
-- Wireframe preview
-
----
-
-# Author
-
-Pranay Paratwar
+Add your preferred license here.

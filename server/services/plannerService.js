@@ -4,6 +4,8 @@ import { normalizeActionPlan } from "./actionPlanner.js";
 import { validateActionPlan } from "../utils/actionValidator.js";
 import { rewriteMessageWithResolvedNodes } from "../utils/nodeResolver.js";
 
+const MAX_LLM_HISTORY = 6;
+
 function detectUndoIntent(message, history) {
   const lower = message.toLowerCase().trim();
 
@@ -138,6 +140,13 @@ export async function generateActionPlan({
     history
   );
 
+  /**
+   * Only recent history goes to LLM
+   * Full history remains available for undo/redo.
+   */
+  const llmHistory = history.slice(-MAX_LLM_HISTORY);
+  const llmRedoHistory = redoHistory.slice(-MAX_LLM_HISTORY);
+
   const systemPrompt = buildPlannerPrompt(layout);
 
   const userPrompt = `
@@ -148,10 +157,10 @@ Original request:
 ${message}
 
 Recent history:
-${JSON.stringify(history)}
+${JSON.stringify(llmHistory)}
 
 Redo history:
-${JSON.stringify(redoHistory)}
+${JSON.stringify(llmRedoHistory)}
 `;
 
   const response = await callLLM({
@@ -163,8 +172,14 @@ ${JSON.stringify(redoHistory)}
     throw new Error("Invalid planner response");
   }
 
-  if (!response.actions || !Array.isArray(response.actions)) {
-    throw new Error("Planner response missing actions");
+  if (
+    !response.actions ||
+    !Array.isArray(response.actions) ||
+    response.actions.length === 0
+  ) {
+    throw new Error(
+      "Planner could not generate actions for this request"
+    );
   }
 
   const executableActions = normalizeActionPlan(

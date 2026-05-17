@@ -36,26 +36,55 @@ function getNodeAliases(node) {
   }
 
   if (node.type === "text") {
-    if (node.id.includes("headline")) {
+    /**
+     * semantic headline detection
+     */
+    if (
+      content.includes("luxury") ||
+      content.includes("headline") ||
+      content.includes("title") ||
+      content.includes("comfort")
+    ) {
       aliases.add("headline");
       aliases.add("title");
       aliases.add("main heading");
       aliases.add("heading");
     }
 
-    if (node.id.includes("subtitle")) {
+    /**
+     * semantic subtitle detection
+     */
+    if (
+      content.includes("subtitle") ||
+      content.includes("subheading") ||
+      content.includes("description") ||
+      content.includes("affordable") ||
+      content.includes("surprisingly")
+    ) {
       aliases.add("subtitle");
       aliases.add("subheading");
       aliases.add("caption");
+      aliases.add("description");
     }
 
-    if (node.id.includes("cta")) {
+    /**
+     * CTA detection
+     */
+    if (
+      content.includes("buy") ||
+      content.includes("shop") ||
+      content.includes("order") ||
+      content.includes("cta")
+    ) {
       aliases.add("cta");
       aliases.add("button");
       aliases.add("call to action");
       aliases.add("buy button");
     }
 
+    /**
+     * generic aliases
+     */
     aliases.add("text");
     aliases.add("text node");
   }
@@ -104,10 +133,19 @@ function getNodeAliases(node) {
   }
 
   if (node.type === "shape") {
-    if (node.id.includes("badge")) {
+    const shapeName = normalizeText(
+      node?.name || ""
+    );
+
+    if (
+      node.id.includes("badge") ||
+      shapeName.includes("badge") ||
+      shapeName.includes("offer")
+    ) {
       aliases.add("badge");
       aliases.add("discount badge");
       aliases.add("sticker");
+      aliases.add("offer shape");
     }
 
     aliases.add("shape");
